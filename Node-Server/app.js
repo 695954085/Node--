@@ -27,18 +27,25 @@ app.post('/login', (req, res) => {
     // 首先查询这个用户是否存在
     db.findDocument('user', { userName: fields.userName }, function (err, docs) {
       if (err) {
-        res.send(util.inspect(err));
+        res.send({
+          code: 500,
+          mesg: util.inspect(err)
+        });
         return;
       }
       if (docs.length != 0) {
         // 对比密码，如果密码一样，那么就发送session
         if (fields.password == docs[0].password) {
-            req.session.user = docs[0];
-            res.send("密码正确，允许登录");
+          delete docs[0].password;
+          req.session.user = docs[0];
+          res.send({
+            code: 200,
+            msg: "密码正确，允许登录"
+          });
         } else {
           res.send(JSON.stringify({
-            code:500,
-            msg:'密码错误'
+            code: 500,
+            msg: '密码错误'
           }));
         }
       } else {
@@ -47,8 +54,12 @@ app.post('/login', (req, res) => {
           if (err) {
             res.end(util.inspect(err));
           } else {
+            delete userData.password;
             req.session.user = userData;
-            res.end("数据库插入成功，注册成功");
+            res.send({
+              code: 200,
+              msg: "数据库插入成功，注册成功"
+            });
           }
         })
       }
@@ -58,11 +69,19 @@ app.post('/login', (req, res) => {
 
 app.get('/islogin', (req, res) => {
   if (req.session.user != null) {
-    res.writeHead(200, { "ContentType": "application/json" });
-    res.end(JSON.stringify({ isLogin: true }));
+    // res.writeHead(200, { "ContentType": "application/json" });
+    // res.end(JSON.stringify({ isLogin: true }));
+    res.send({
+      code: 200,
+      isLogin: true
+    })
   } else {
-    res.writeHead(200, { "ContentType": "application/json" });
-    res.end(JSON.stringify({ isLogin: false }));
+    // res.writeHead(200, { "ContentType": "application/json" });
+    // res.end(JSON.stringify({ isLogin: false }));
+    res.send({
+      code: 200,
+      isLogin: false
+    })
   }
 });
 
@@ -87,16 +106,16 @@ app.post('/addMessage', (req, res) => {
       return;
     }
     if (fields._id == req.session.user._id) {
-      let json;
-      if(fields.message == undefined){
-      }else{
+      let json = null;
+      if (fields.message == undefined) {
+      } else {
         json = {
           text: fields.message,
           date: new Date(),
           self: fields.self
         }
       }
-      service.addMessage(fields._id, fields.friendOid,json , (err, result) => {
+      service.addMessage(fields._id, fields.friendOid, json, (err, result) => {
         if (err) {
           console.log(err);
           res.send(err);
@@ -113,6 +132,11 @@ app.post('/addMessage', (req, res) => {
   })
 })
 
-
+app.use((req,res,next)=>{
+  res.send({
+    code:404,
+    msg:"错误url"
+  });
+})
 
 app.listen(3000);

@@ -32,7 +32,7 @@ exports.addMessage = (userOid, friendOid, json, callback) => {
   db.findDocument('sessionList', { oid: userOid }, (err, docs) => {
     if (err) {
       callback(err);
-      returnl
+      return;
     }
     if (docs.length != 0) {
       // 2. 存在该userOid ，如果存在friendOid那么，就在messages中插入，如果不存在该friendOid，那么就personalSessionList插入
@@ -113,7 +113,7 @@ exports.addMessage = (userOid, friendOid, json, callback) => {
       // 插入数据
       let messages = [];
       let reverseMessages = [];
-      if (json) {
+      if (json != null) {
         messages.push(json);
         reverseMessages.push({
           text: json.text,
