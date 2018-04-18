@@ -43,6 +43,7 @@ export default {
 .list__menu {
   list-style: none;
   padding: 0px;
+  margin: 0px;
 
   .list__item {
     padding: 0px;

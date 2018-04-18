@@ -87,7 +87,16 @@ app.post('/addMessage', (req, res) => {
       return;
     }
     if (fields._id == req.session.user._id) {
-      service.addMessage(fields._id, fields.friendOid, fields.message, (err, result) => {
+      let json;
+      if(fields.message == undefined){
+      }else{
+        json = {
+          text: fields.message,
+          date: new Date(),
+          self: fields.self
+        }
+      }
+      service.addMessage(fields._id, fields.friendOid,json , (err, result) => {
         if (err) {
           console.log(err);
           res.send(err);

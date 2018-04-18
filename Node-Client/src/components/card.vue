@@ -1,7 +1,8 @@
 <template>
   <div class="card">
     <header>
-      <img class="header__avatar" :src="user.img" :alt="user.name" width="40px" height="40px" />
+      <img class="header__avatar" :src="user.img" :alt="user.name" width="40px" height="40px" v-if="user.img"/>
+      <img v-else class="header__avatar" width="40px" height="40px" src="../assets/logo.png"/>
       <p class="header__name">{{user.userName}}</p>
     </header>
     <footer>

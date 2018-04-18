@@ -27,7 +27,7 @@ exports.getServerData = (user, callback) => {
 }
 
 // 某一个用户对某个user添加新会话消息
-exports.addMessage = (userOid, friendOid, message, callback) => {
+exports.addMessage = (userOid, friendOid, json, callback) => {
   // 1. 首先判断sessionList集合中是否存在userOid，如果不存在insert({oid:userOid,personalSessionList:[{...}]})
   db.findDocument('sessionList', { oid: userOid }, (err, docs) => {
     if (err) {
@@ -50,17 +50,27 @@ exports.addMessage = (userOid, friendOid, message, callback) => {
             'personalSessionList.friendOid': friendOid
           }, {
               $push: {
-                'personalSessionList.$.messages': {
-                  text: message,
-                  date: new Date()
-                }
+                'personalSessionList.$.messages': json
               }
             }, (err, result) => {
               if (err) {
                 callback(err);
                 return;
               }
-              callback(null, result);
+              db.updateDocument('sessionList', {
+                oid: friendOid,
+                'personalSessionList.friendOid': userOid
+              }, {
+                  $push: {
+                    'personalSessionList.$.messages': {
+                      text: json.text,
+                      date: json.date,
+                      self: false
+                    }
+                  }
+                }, (err, docs) => {
+                  callback(null, result);
+                });
             })
         } else {
           //
@@ -71,10 +81,7 @@ exports.addMessage = (userOid, friendOid, message, callback) => {
                 personalSessionList: {
                   friendOid: friendOid,
                   messages: [
-                    {
-                      text: message,
-                      date: new Date()
-                    }
+                    json
                   ]
                 }
               }
@@ -83,23 +90,43 @@ exports.addMessage = (userOid, friendOid, message, callback) => {
                 callback(err);
                 return;
               }
-              callback(null, result);
+              db.updateDocument('sessionList', {
+                oid: friendOid,
+              }, {
+                  $push: {
+                    personalSessionList: {
+                      friendOid: userOid,
+                      messages: [{
+                        text: json.text,
+                        date: json.date,
+                        self: false
+                      }]
+                    }
+                  }
+                }, (err, result) => {
+                  callback(null, result);
+                })
             })
         }
       })
     } else {
-      // 插入shuju
+      // 插入数据
+      let messages = [];
+      let reverseMessages = [];
+      if (json) {
+        messages.push(json);
+        reverseMessages.push({
+          text: json.text,
+          date: json.date,
+          self: !json.self
+        })
+      }
       db.insertOne('sessionList', {
         oid: userOid,
         personalSessionList: [
           {
             friendOid: friendOid,
-            messages: [
-              {
-                text: message,
-                date: new Date()
-              }
-            ]
+            messages: messages
           }
         ]
       }, (err, result) => {
@@ -107,7 +134,17 @@ exports.addMessage = (userOid, friendOid, message, callback) => {
           callback(err);
           return;
         }
-        callback(null, result);
+        db.insertOne('sessionList', {
+          oid: friendOid,
+          personalSessionList: [
+            {
+              friendOid: userOid,
+              messages: reverseMessages
+            }
+          ]
+        }, (err, docs) => {
+          callback(null, result);
+        })
       })
     }
   })

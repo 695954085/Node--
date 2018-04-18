@@ -6,6 +6,7 @@
     </div>
     <div class="liuyanben__main">
       <message :session='session' :user="user" :user-list='userList'></message>
+      <mtext @addMessage='addSessionMessage'></mtext>
     </div>
   </div>
 </template>
@@ -14,6 +15,7 @@
 import card from "@/components/card";
 import list from "@/components/list";
 import message from "@/components/message";
+import mtext from "@/components/text";
 import { getServerData, addMessage } from "@/api/api";
 
 export default {
@@ -41,7 +43,8 @@ export default {
   components: {
     card: card,
     list: list,
-    message
+    message,
+    mtext
   },
   methods: {
     searchSession(value) {
@@ -51,7 +54,13 @@ export default {
       this.sessionIndex = index;
     },
     addSession(value) {
-      addMessage(this.user._id, value, "测试").then(value => {
+      addMessage(this.user._id, value, "测试",true).then(value => {
+        console.log(value);
+      });
+    },
+    addSessionMessage(message){
+      this.$set(this.session,this.session.message,this.session.messages.push(message));
+      addMessage(this.user._id, this.session.friendOid, message.text,true).then(value => {
         console.log(value);
       });
     },
@@ -69,15 +78,6 @@ export default {
   created() {
     //获取服务器数据
     this.init();
-    // getServerData().then(serverData => {
-    //   this.user = Object.assign(this.user, serverData.data.user);
-    //   this.userList = serverData.data.userList;
-    //   if (serverData.data.sessionList[0] !== undefined) {
-    //     this.sessionList = serverData.data.sessionList[0].personalSessionList;
-    //   } else {
-    //     this.sessionList = [];
-    //   }
-    // });
   }
 };
 </script>
@@ -91,6 +91,7 @@ export default {
     width: 200px;
     color: #f4f4f4;
     background-color: #2e3238;
+    height: 100%;
   }
   .liuyanben__main {
     float: left;

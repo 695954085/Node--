@@ -10,7 +10,7 @@ const router = new Router({
   routes: [
     {
       path: '/',
-      name: 'LiuYanBen',
+      name: '',
       component: LiuYanBen
     },
     {

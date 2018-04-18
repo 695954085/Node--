@@ -5,8 +5,8 @@
         <p class="item__time">
           <span class="time__text">{{item.date | time}}</span>
         </p>
-        <div :class="['item__main',{'self':session.self}]">
-          <img class="item__avatar" :src='item | avatar' />
+        <div :class="['item__main',{'self':item.self}]">
+          <img class="item__avatar" :src='avatar(item)' width="30" height="30" />
           <div class="item__text">{{item.text}}</div>
         </div>
       </li>
@@ -21,13 +21,6 @@ export default {
   },
   props: ["session", "user", "userList"],
   filters: {
-    avatar(value) {
-      if (value.self) {
-        return this.user.img;
-      }
-      console.log(this);
-      return this.user.img;
-    },
     // 将日期过滤为 hour:minutes
     time(date) {
       if (typeof date === "string") {
@@ -38,25 +31,30 @@ export default {
   },
   computed: {
     sessionUser() {
-      // if(this.userList == undefined){
-      //   return '';
-      // }
-      // return this.userList.filters(value => {
-      //   if (value._id == this.session.friendOid) {
-      //     return true;
-      //   }
-      //   return false;
-      // })[0];
-      return {
-        img:'http://localhost:3000/img/1.jpg'
-      };
+      if (this.userList == undefined) {
+        return "";
+      }
+      return this.userList.filter(value => {
+        if (value._id == this.session.friendOid) {
+          return true;
+        }
+        return false;
+      })[0];
     },
-    messages(){
-      if(this.session != undefined){
+    messages() {
+      if (this.session != undefined) {
         return this.session.messages;
-      }else{
+      } else {
         return [];
       }
+    }
+  },
+  methods: {
+    avatar(item) {
+      if (item.self) {
+        return this.user.img;
+      }
+      return this.sessionUser.img;
     }
   }
 };
@@ -66,10 +64,12 @@ export default {
 .message {
   padding: 10px 15px;
   overflow-y: scroll;
+  height: 440px;
 
   .message__ul {
     list-style: none;
     padding: 0px;
+    margin: 0px;
   }
 
   .message__item {
@@ -86,6 +86,7 @@ export default {
         color: #fff;
         border-radius: 2px;
         background-color: #dcdcdc;
+        line-height: 1rem;
       }
     }
 
@@ -115,6 +116,25 @@ export default {
         right: 100%;
         border: 6px solid transparent;
         border-right-color: #fafafa;
+      }
+    }
+  }
+
+  .self {
+    text-align: right;
+
+    .item__avatar {
+      float: right;
+      margin: 0 0 0 10px;
+    }
+    .item__text {
+      background-color: #b2e281;
+
+      &:before {
+        right: inherit;
+        left: 100%;
+        border-right-color: transparent;
+        border-left-color: #b2e281;
       }
     }
   }
